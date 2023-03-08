@@ -7,3 +7,6 @@ edition = "2021"
 
 [dependencies]
 hex = "0.4.3"
+
+[dev-dependencies]
+rstest = "0.16.0"

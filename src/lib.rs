@@ -5,6 +5,10 @@ pub enum Opcode {
     STOP,
     ADD,
     MUL,
+    DIV,
+    SDIV,
+    MOD,
+    SMOD,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -53,6 +57,10 @@ fn decode_operation(bytes: &mut VecDeque<u8>) -> Operation {
             0x00 => Operation::new(Opcode::STOP),
             0x01 => Operation::new(Opcode::ADD).with_stack_input(2, bytes),
             0x02 => Operation::new(Opcode::MUL).with_stack_input(2, bytes),
+            0x03 => Operation::new(Opcode::DIV).with_stack_input(2, bytes),
+            0x04 => Operation::new(Opcode::SDIV).with_stack_input(2, bytes),
+            0x05 => Operation::new(Opcode::MOD).with_stack_input(2, bytes),
+            0x06 => Operation::new(Opcode::SMOD).with_stack_input(2, bytes),
             _ => panic!("Invalid opcode: {}", value),
         },
     }
@@ -61,6 +69,7 @@ fn decode_operation(bytes: &mut VecDeque<u8>) -> Operation {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use rstest::*;
 
     fn pad_word(input: &str) -> [u8; 32] {
         let mut word = [0u8; 32];
@@ -77,49 +86,29 @@ mod tests {
         return bytes;
     }
 
-    #[test]
-    fn decode_stop() {
-        let result = disassemble("0x00");
-        assert_eq!(
-            result,
-            vec![Operation {
-                opcode: Opcode::STOP,
-                stack_input: vec![],
-            }]
-        );
-    }
-
-    #[test]
-    fn decode_add() {
-        let a = pad_word("100");
-        let b = pad_word("1234567");
-        let encoded_op = encode_op("0x01", vec![a, b]);
+    #[rstest]
+    #[case(Opcode::STOP, "0x00", vec![])]
+    #[case(Opcode::ADD, "0x01", vec!["100", "1234567"])]
+    #[case(Opcode::MUL, "0x02", vec!["100", "1234567"])]
+    #[case(Opcode::DIV, "0x03", vec!["100", "1234567"])]
+    #[case(Opcode::SDIV, "0x04", vec!["100", "1234567"])]
+    #[case(Opcode::MOD, "0x05", vec!["100", "1234567"])]
+    #[case(Opcode::SMOD, "0x06", vec!["100", "1234567"])]
+    fn decode_single_op(#[case] opcode: Opcode, #[case] encoded_opcode: &str, #[case] arguments: Vec<&str>) {
+        let stack_input: Vec<[u8;32]> = arguments.iter().map(|arg| pad_word(arg)).collect();
+        println!("stack_input: {:?}", stack_input);
+        let encoded_op = encode_op(encoded_opcode, stack_input.clone());
         let result = disassemble(&encoded_op);
         assert_eq!(
             result,
             vec![Operation {
-                opcode: Opcode::ADD,
-                stack_input: vec![a, b],
+                opcode,
+                stack_input,
             }]
         );
     }
 
-    #[test]
-    fn decode_mul() {
-        let a = pad_word("100");
-        let b = pad_word("1234567");
-        let encoded_op = encode_op("0x02", vec![a, b]);
-        let result = disassemble(&encoded_op);
-        assert_eq!(
-            result,
-            vec![Operation {
-                opcode: Opcode::MUL,
-                stack_input: vec![a, b],
-            }]
-        );
-    }
-
-    #[test]
+    #[rstest]
     fn decode_stop_and_add() {
         let a = pad_word("100");
         let b = pad_word("1234567");
