@@ -2,14 +2,38 @@ use std::collections::VecDeque;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Opcode {
-    Stop,
-    Add,
+    STOP,
+    ADD,
+    MUL,
 }
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Operation {
     opcode: Opcode,
     stack_input: Vec<[u8; 32]>,
+}
+
+impl Operation {
+    pub fn new(opcode: Opcode) -> Self {
+        Operation {
+            opcode,
+            stack_input: Vec::new(),
+        }
+    }
+
+    pub fn with_stack_input(&self, num_words: u8, bytes: &mut VecDeque<u8>) -> Self {
+        let stack_input = (0..num_words)
+            .map(|_| {
+                let mut word = [0u8; 32];
+                word.copy_from_slice(&bytes.drain(0..32).collect::<Vec<u8>>());
+                word
+            })
+            .collect();
+        Operation {
+            opcode: self.opcode,
+            stack_input,
+        }
+    }
 }
 
 pub fn disassemble(mut input: &str) -> Vec<Operation> {
@@ -26,32 +50,12 @@ fn decode_operation(bytes: &mut VecDeque<u8>) -> Operation {
     match bytes.pop_front() {
         None => panic!("Unexpected end of input"),
         Some(value) => match value {
-            0x00 => decode_stop(),
-            0x01 => decode_add(bytes),
+            0x00 => Operation::new(Opcode::STOP),
+            0x01 => Operation::new(Opcode::ADD).with_stack_input(2, bytes),
+            0x02 => Operation::new(Opcode::MUL).with_stack_input(2, bytes),
             _ => panic!("Invalid opcode: {}", value),
         },
     }
-}
-
-fn decode_stop() -> Operation {
-    Operation {
-        opcode: Opcode::Stop,
-        stack_input: Vec::new(),
-    }
-}
-fn decode_add(bytes: &mut VecDeque<u8>) -> Operation {
-    Operation {
-        opcode: Opcode::Add,
-        stack_input: vec![pop_word(bytes), pop_word(bytes)],
-    }
-}
-
-fn pop_word(bytes: &mut VecDeque<u8>) -> [u8; 32] {
-    let mut word = [0u8; 32];
-    for i in 0..32 {
-        word[i] = bytes.pop_front().expect("Unexpected end of input in word");
-    }
-    return word;
 }
 
 #[cfg(test)]
@@ -79,7 +83,7 @@ mod tests {
         assert_eq!(
             result,
             vec![Operation {
-                opcode: Opcode::Stop,
+                opcode: Opcode::STOP,
                 stack_input: vec![],
             }]
         );
@@ -90,12 +94,26 @@ mod tests {
         let a = pad_word("100");
         let b = pad_word("1234567");
         let encoded_op = encode_op("0x01", vec![a, b]);
-        println!("encoded_op: {}", encoded_op);
         let result = disassemble(&encoded_op);
         assert_eq!(
             result,
             vec![Operation {
-                opcode: Opcode::Add,
+                opcode: Opcode::ADD,
+                stack_input: vec![a, b],
+            }]
+        );
+    }
+
+    #[test]
+    fn decode_mul() {
+        let a = pad_word("100");
+        let b = pad_word("1234567");
+        let encoded_op = encode_op("0x02", vec![a, b]);
+        let result = disassemble(&encoded_op);
+        assert_eq!(
+            result,
+            vec![Operation {
+                opcode: Opcode::MUL,
                 stack_input: vec![a, b],
             }]
         );
@@ -111,11 +129,11 @@ mod tests {
         assert_eq!(
             result,
             vec![Operation {
-                opcode: Opcode::Add,
+                opcode: Opcode::ADD,
                 stack_input: vec![a, b],
             },
             Operation {
-                opcode: Opcode::Stop,
+                opcode: Opcode::STOP,
                 stack_input: vec![],
             }]
         );
