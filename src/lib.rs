@@ -54,7 +54,6 @@ mod tests {
         let code = "608060405260043610603f57600035";
         let operations = disassemble(&code);
         assert_eq!(operations.len(), 10);
-        println!("Decoded preamble: {:#?}", operations);
     }
 
     #[rstest]

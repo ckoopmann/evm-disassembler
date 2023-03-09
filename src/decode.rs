@@ -11,7 +11,6 @@ pub fn decode_operation(bytes: &mut VecDeque<u8>) -> Operation {
         },
         _ => Operation::new(opcode),
     };
-    println!("Decoded operation: {:#?}", operation);
     operation
 }
 
