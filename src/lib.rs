@@ -30,18 +30,25 @@ mod tests {
     use rstest::*;
 
     #[rstest]
-    #[case("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")]
+    #[case("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", 1577, vec![(Opcode::DUP7, 1000), (Opcode::EXTCODECOPY, 1563)])]
     #[tokio::test]
-    async fn decode_transaction(#[case] address: &str) {
+    async fn decode_code_from_rpc_provider(
+        #[case] address: &str,
+        #[case] expected_length: usize,
+        #[case] expected_opcodes: Vec<(Opcode, usize)>,
+    ) {
         let code = get_contract_code(address).await;
         let operations = disassemble(&code);
-        assert!(!operations.is_empty());
+        assert_eq!(operations.len(), expected_length);
+        for (opcode, expected_position) in expected_opcodes.iter() {
+            assert_eq!(operations[*expected_position].opcode, *opcode);
+        }
     }
 
     #[rstest]
     #[case("testdata/weth_encoded.txt")]
     #[case("testdata/usdc_encoded.txt")]
-    fn decode_transaction_from_file(#[case] address: &str) {
+    fn decode_code_from_file(#[case] address: &str) {
         let mut code = std::fs::read_to_string(address).unwrap();
         // Remove trailing \n
         code.pop();
