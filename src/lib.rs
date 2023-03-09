@@ -1,10 +1,10 @@
 use std::collections::VecDeque;
 
-use crate::types::Operation;
 use crate::decode::decode_operation;
+use crate::types::Operation;
 
-pub mod types;
 mod decode;
+pub mod types;
 
 #[cfg(test)]
 mod test_utils;
@@ -25,9 +25,9 @@ pub fn disassemble(input: &str) -> Vec<Operation> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use rstest::*;
-    use crate::types::Opcode;
     use crate::test_utils::get_contract_code;
+    use crate::types::Opcode;
+    use rstest::*;
 
     #[rstest]
     #[case("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")]
@@ -69,10 +69,7 @@ mod tests {
     #[case(Opcode::MULMOD, "0x09")]
     fn decode_single_op(#[case] opcode: Opcode, #[case] encoded_opcode: &str) {
         let result = disassemble(encoded_opcode);
-        assert_eq!(
-            result,
-            vec![Operation::new(opcode)]
-        );
+        assert_eq!(result, vec![Operation::new(opcode)]);
     }
 
     #[rstest]
@@ -82,10 +79,7 @@ mod tests {
         let result = disassemble(&(add_op.to_owned() + stop_op));
         assert_eq!(
             result,
-            vec![
-            Operation::new(Opcode::ADD),
-            Operation::new(Opcode::STOP),
-            ]
+            vec![Operation::new(Opcode::ADD), Operation::new(Opcode::STOP),]
         );
     }
 }
