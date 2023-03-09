@@ -6,6 +6,9 @@ use crate::decode::decode_operation;
 pub mod types;
 mod decode;
 
+#[cfg(test)]
+mod test_utils;
+
 pub fn disassemble(mut input: &str) -> Vec<Operation> {
     input = input.trim_start_matches("0x");
     let mut bytes = VecDeque::from(hex::decode(input).expect("Invalid hex string"));
@@ -21,20 +24,30 @@ mod tests {
     use super::*;
     use rstest::*;
     use crate::types::Opcode;
+    use crate::test_utils::{pad_word, encode_op, get_contract_code};
 
-    fn pad_word(input: &str) -> [u8; 32] {
-        let mut word = [0u8; 32];
-        let padded_string = format!("{:0>64}", input);
-        hex::decode_to_slice(padded_string, &mut word).expect("Invalid hex string");
-        return word;
+    #[rstest]
+    #[case("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")]
+    #[tokio::test]
+    async fn decode_transaction(#[case] address: &str) {
+        let code = get_contract_code(address).await;
+        let operations = disassemble(&code);
+        assert!(operations.len() > 0);
     }
 
-    fn encode_op(opcode: &str, stack_input: Vec<[u8; 32]>) -> String {
-        let mut bytes: String = opcode.to_owned();
-        for word in stack_input {
-            bytes += &hex::encode(word);
-        }
-        return bytes;
+    #[rstest]
+    #[case("testdata/weth_encoded.txt")]
+    fn decode_transaction_from_file(#[case] address: &str) {
+        let code = std::fs::read_to_string(address).unwrap();
+        let operations = disassemble(&code);
+        assert!(operations.len() > 0);
+    }
+
+    #[rstest]
+    fn decode_preamble() {
+        let code = "608060405260043610603f57600035";
+        let operations = disassemble(&code);
+        assert_eq!(operations.len(), 10);
     }
 
     #[rstest]

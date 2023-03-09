@@ -161,7 +161,7 @@ impl Operation {
         }
     }
 
-    pub fn with_stack_input(self, num_words: u8, bytes: &mut VecDeque<u8>) -> Self {
+    pub fn with_words(self, num_words: u8, bytes: &mut VecDeque<u8>) -> Self {
         if num_words == 0 {
             return self;
         }
@@ -175,6 +175,21 @@ impl Operation {
         Operation {
             opcode: self.opcode,
             stack_input,
+        }
+    }
+
+    pub fn with_bytes(self, num_bytes: usize, bytes: &mut VecDeque<u8>) -> Self {
+        if num_bytes == 0 {
+            return self;
+        }
+        if num_bytes > 32 {
+            panic!("Cannot have more than 32 bytes in a word");
+        }
+        let mut word = [0u8; 32];
+        word[32-num_bytes..].clone_from_slice(&bytes.drain(0..num_bytes).collect::<Vec<u8>>());
+        Operation {
+            opcode: self.opcode,
+            stack_input: vec![word],
         }
     }
 }

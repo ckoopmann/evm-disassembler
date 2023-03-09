@@ -2,11 +2,18 @@ use crate::types::{Opcode, Operation};
 use std::collections::VecDeque;
 
 pub fn decode_operation(bytes: &mut VecDeque<u8>) -> Operation {
-    let (opcode, num_inputs) = match bytes.pop_front() {
-        None => panic!("Unexpected end of input"),
-        Some(value) => get_opcode_and_num_inputs(value),
+    let encoded_opcode = bytes.pop_front().expect("Unexpected end of input");
+    let (opcode, num_inputs) = get_opcode_and_num_inputs(encoded_opcode);
+    println!("Found opcode: {:?}", opcode);
+    let operation = match encoded_opcode {
+        0x60..=0x7f => {
+            let num_bytes = encoded_opcode - 0x5f;
+            Operation::new(opcode).with_bytes(num_bytes as usize, bytes)
+        },
+        _ => Operation::new(opcode).with_words(num_inputs, bytes),
     };
-    Operation::new(opcode).with_stack_input(num_inputs, bytes)
+    println!("Decoded operation: {:#?}", operation);
+    operation
 }
 
 fn get_opcode_and_num_inputs(opcode: u8) -> (Opcode, u8) {
