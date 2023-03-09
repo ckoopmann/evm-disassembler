@@ -161,7 +161,10 @@ impl Operation {
         }
     }
 
-    pub fn with_stack_input(&self, num_words: u8, bytes: &mut VecDeque<u8>) -> Self {
+    pub fn with_stack_input(self, num_words: u8, bytes: &mut VecDeque<u8>) -> Self {
+        if num_words == 0 {
+            return self;
+        }
         let stack_input = (0..num_words)
             .map(|_| {
                 let mut word = [0u8; 32];
