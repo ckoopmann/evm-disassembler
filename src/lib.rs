@@ -16,10 +16,10 @@ pub fn disassemble(input: &str) -> Vec<Operation> {
     }
     let mut bytes = VecDeque::from(hex::decode(input).expect("Invalid hex string"));
     let mut operations = Vec::new();
-    while bytes.len() > 0 {
+    while !bytes.is_empty() {
         operations.push(decode_operation(&mut bytes));
     }
-    return operations;
+    operations
 }
 
 #[cfg(test)]
@@ -35,7 +35,7 @@ mod tests {
     async fn decode_transaction(#[case] address: &str) {
         let code = get_contract_code(address).await;
         let operations = disassemble(&code);
-        assert!(operations.len() > 0);
+        assert!(!operations.is_empty());
     }
 
     #[rstest]
@@ -46,13 +46,13 @@ mod tests {
         // Remove trailing \n
         code.pop();
         let operations = disassemble(&code);
-        assert!(operations.len() > 0);
+        assert!(!operations.is_empty());
     }
 
     #[rstest]
     fn decode_preamble() {
         let code = "608060405260043610603f57600035";
-        let operations = disassemble(&code);
+        let operations = disassemble(code);
         assert_eq!(operations.len(), 10);
     }
 
@@ -68,7 +68,7 @@ mod tests {
     #[case(Opcode::ADDMOD, "0x08")]
     #[case(Opcode::MULMOD, "0x09")]
     fn decode_single_op(#[case] opcode: Opcode, #[case] encoded_opcode: &str) {
-        let result = disassemble(&encoded_opcode);
+        let result = disassemble(encoded_opcode);
         assert_eq!(
             result,
             vec![Operation::new(opcode)]
@@ -79,7 +79,7 @@ mod tests {
     fn decode_stop_and_add() {
         let add_op = "01";
         let stop_op = "00";
-        let result = disassemble(&(add_op.to_owned() + &stop_op));
+        let result = disassemble(&(add_op.to_owned() + stop_op));
         assert_eq!(
             result,
             vec![

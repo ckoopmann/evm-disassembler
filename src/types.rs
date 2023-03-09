@@ -306,7 +306,7 @@ pub struct Operation {
 
 impl fmt::Debug for Operation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        if self.input.len() > 0 {
+        if !self.input.is_empty() {
             write!(
                 f,
                 "{:?} {}",
