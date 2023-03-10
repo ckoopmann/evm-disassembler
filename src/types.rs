@@ -1,9 +1,9 @@
+use eyre::{eyre, Result};
 use std::collections::VecDeque;
 use std::fmt;
-use eyre::{eyre, Result};
 
 /// A single EVM operation
-/// 
+///
 /// For additional information on each operation see: https://www.evm.codes/
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[allow(missing_docs)]
@@ -320,18 +320,18 @@ pub struct Operation {
 
 impl fmt::Debug for Operation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        let mut formatted = format!("{:0>8}: {:?}", format!("{:#x}", self.offset).trim_start_matches("0x"), self.opcode);
+        let mut formatted = format!(
+            "{:0>8}: {:?}",
+            format!("{:#x}", self.offset).trim_start_matches("0x"),
+            self.opcode
+        );
         if !self.input.is_empty() {
             let encoded_bytes = hex::encode(&self.input);
             let mut formatted_bytes = encoded_bytes.trim_start_matches('0');
             if formatted_bytes.is_empty() {
                 formatted_bytes = "0";
             }
-            formatted = format!(
-                "{} {}",
-                formatted,
-                "0x".to_owned() +  formatted_bytes
-            );
+            formatted = format!("{} {}", formatted, "0x".to_owned() + formatted_bytes);
         }
         write!(f, "{formatted}")
     }
@@ -353,7 +353,11 @@ impl Operation {
             return Ok(self);
         }
         if num_bytes as usize > bytes.len() {
-            return Err(eyre!("Not enough bytes to read - expected {} but only {} left", num_bytes, bytes.len()));
+            return Err(eyre!(
+                "Not enough bytes to read - expected {} but only {} left",
+                num_bytes,
+                bytes.len()
+            ));
         }
         Ok(Operation {
             opcode: self.opcode,

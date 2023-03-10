@@ -8,7 +8,7 @@
 //!
 //! ```rust
 //! use evm_disassembler::{disassemble_str, disassemble_bytes, format_operations};
-//! 
+//!
 //! fn main() {
 //!    
 //!   let bytecode = "608060405260043610603f57600035";
@@ -38,14 +38,14 @@ pub mod types;
 mod test_utils;
 
 /// Disassemble a hex encoded string into a vector of instructions / operations
-/// 
+///
 /// # Arguments
 /// - `input` - A hex encoded string representing the bytecode to disassemble
-/// 
+///
 /// ```rust
 /// use evm_disassembler::disassemble_str;
-/// 
-/// 
+///
+///
 /// fn main() {
 ///    
 ///   let bytecode = "0x608060405260043610603f57600035";
@@ -60,16 +60,16 @@ pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
 }
 
 /// Disassemble a vector of bytes into a vecotr of decoded Operations
-/// 
+///
 /// Will stop disassembling when it encounters a push instruction with a size greater than
 /// remaining bytes in the input
-/// 
+///
 /// # Arguments
 /// - `input` - A vector of bytes representing the encoded bytecode
-/// 
+///
 /// ```rust
 /// use evm_disassembler::disassemble_bytes;
-/// 
+///
 /// fn main() {
 ///   let bytecode = "608060405260043610603f57600035";
 ///   let bytes = hex::decode(bytecode).unwrap();
@@ -95,21 +95,21 @@ pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
 }
 
 /// Converts a vector of decoded operations into a human readable formatted string
-/// 
+///
 /// Operations are formatted on individual lines with the following format:
 /// `{offset}: {opcode} {bytes}`
 ///
 /// - `offset` - The offset of the operation in the bytecode (as hex)
 /// - `opcode` - The respective opcode (i.e. "PUSH1", "ADD")
 /// - `bytes` - Additional bytes that are part of the operation (only for "PUSH" instructions)
-/// 
+///
 /// # Arguments
 /// - `operations` - A vector of decoded operations as returned by `disassemble_str` or
 /// `disassemble_bytes`
-/// 
+///
 /// ```rust
 /// use evm_disassembler::{disassemble_str, format_operations};
-/// 
+///
 /// fn main() {
 ///   let bytecode = "0x608060405260043610603f57600035";
 ///   let instructions = disassemble_str(bytecode).unwrap();
@@ -149,14 +149,15 @@ mod tests {
     }
 
     #[rstest]
-    #[case("0xDef1C0ded9bec7F1a1670819833240f027b25EfF")]  // UniswapV3 Router
-    #[case("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")]  // Weth
-    #[case("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")]  // ZeroEx Proxy
-    #[case("0x00000000006c3852cbEf3e08E8dF289169EdE581")]  // Seaport
+    #[case("0xDef1C0ded9bec7F1a1670819833240f027b25EfF")] // UniswapV3 Router
+    #[case("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")] // Weth
+    #[case("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")] // ZeroEx Proxy
+    #[case("0x00000000006c3852cbEf3e08E8dF289169EdE581")] // Seaport
     fn decode_code_from_file(#[case] address: &str) {
-        let mut code = fs::read_to_string(format!("testdata/{address}_encoded.txt")).expect("Unable to read encoded file");
-        let decoded_reference =
-            fs::read_to_string(format!("testdata/{address}_decoded.txt")).expect("No reference file");
+        let mut code = fs::read_to_string(format!("testdata/{address}_encoded.txt"))
+            .expect("Unable to read encoded file");
+        let decoded_reference = fs::read_to_string(format!("testdata/{address}_decoded.txt"))
+            .expect("No reference file");
         code.pop();
 
         let operations = disassemble_str(&code).expect("Unable to decode");
@@ -165,9 +166,7 @@ mod tests {
         for (i, line) in formatted_operations.lines().enumerate() {
             assert_eq!(line, decoded_reference.lines().nth(i).unwrap());
         }
-        println!(
-            "Decoded output from contract {address} matches reference"
-        );
+        println!("Decoded output from contract {address} matches reference");
     }
 
     #[rstest]
@@ -183,7 +182,6 @@ mod tests {
         let operations = disassemble_bytes(bytes).expect("Unable to decode");
         assert_eq!(operations.len(), 10);
     }
-
 
     #[rstest]
     #[case(Opcode::STOP, "0x00")]
