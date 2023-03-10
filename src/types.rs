@@ -1,5 +1,6 @@
 use std::collections::VecDeque;
 use std::fmt;
+use eyre::{eyre, Result};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Opcode {
@@ -333,14 +334,17 @@ impl Operation {
         }
     }
 
-    pub fn with_bytes(self, num_bytes: u8, bytes: &mut VecDeque<u8>) -> Self {
+    pub fn with_bytes(self, num_bytes: u8, bytes: &mut VecDeque<u8>) -> Result<Self> {
         if num_bytes == 0 {
-            return self;
+            return Ok(self);
         }
-        Operation {
+        if num_bytes as usize > bytes.len() {
+            return Err(eyre!("Not enough bytes to read - expected {} but only {} left", num_bytes, bytes.len()));
+        }
+        Ok(Operation {
             opcode: self.opcode,
             offset: self.offset,
             input: bytes.drain(0..num_bytes as usize).collect::<Vec<u8>>(),
-        }
+        })
     }
 }

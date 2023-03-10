@@ -3,31 +3,35 @@ use std::collections::VecDeque;
 use crate::decode::decode_operation;
 use crate::types::Operation;
 
+use eyre::{eyre, Result};
+
 mod decode;
 pub mod types;
 
 #[cfg(test)]
 mod test_utils;
 
-pub fn disassemble(input: &str) -> Vec<Operation> {
-    let mut input = input.trim_start_matches("0x").to_owned();
+pub fn disassemble(input: &str) -> Result<Vec<Operation>> {
+    let input = input.trim_start_matches("0x").to_owned();
     // TODO: Potentially remove
     if input.len() % 2 != 0 {
-        println!(
-            "Odd number of bytes in input {}, adding 0 to front",
-            input.len()
-        );
-        input = "0".to_owned() + &input;
+        return Err(eyre!("Odd number of hex characters"));
     }
     let mut bytes = VecDeque::from(hex::decode(input).expect("Invalid hex string"));
     let mut operations = Vec::new();
     let mut new_operation: Operation;
     let mut offset = 0;
     while !bytes.is_empty() {
-        (new_operation, offset) = decode_operation(&mut bytes, offset);
+        (new_operation, offset) = match decode_operation(&mut bytes, offset) {
+            Ok((operation, new_offset)) => (operation, new_offset),
+            Err(e) => {
+                println!("Stop decoding at offset {} due to error : {}", offset, e);
+                break;
+            }
+        };
         operations.push(new_operation);
     }
-    operations
+    Ok(operations)
 }
 
 pub fn format_operations(operations: Vec<Operation>) -> String {
@@ -55,67 +59,40 @@ mod tests {
         #[case] expected_opcodes: Vec<(Opcode, usize)>,
     ) {
         let code = get_contract_code(address).await;
-        let operations = disassemble(&code);
+        let operations = disassemble(&code).expect("Unable to disassemble code");
         assert_eq!(operations.len(), expected_length);
         for (opcode, expected_position) in expected_opcodes.iter() {
             assert_eq!(operations[*expected_position].opcode, *opcode);
         }
-
-        println!("Decoded from rpc:\n{}", format_operations(operations));
     }
 
     #[rstest]
-    fn decode_code_from_file() {
-        let encoded_files = fs::read_dir("testdata");
-        for encoded_file in encoded_files
-            .unwrap()
-            .filter(|f| f.is_ok())
-            .map(|f| f.unwrap().path())
-            .filter(|f| {
-                f.file_name()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .contains("_encoded.txt")
-            })
-        {
-            let decoded_file = encoded_file.with_file_name(
-                encoded_file
-                    .file_name()
-                    .unwrap()
-                    .to_str()
-                    .unwrap()
-                    .replace("_encoded.txt", "_decoded.txt"),
-            );
-            if !decoded_file.exists() {
-                println!(
-                    "Skipping {} because no corresponding decoded file  at {} exists",
-                    encoded_file.to_str().unwrap(),
-                    decoded_file.to_str().unwrap()
-                );
-                continue;
-            }
+    #[case("0xDef1C0ded9bec7F1a1670819833240f027b25EfF")]  // UniswapV3 Router
+    #[case("0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2")]  // Weth
+    #[case("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")]  // ZeroEx Proxy
+    #[case("0x00000000006c3852cbEf3e08E8dF289169EdE581")]  // Seaport
+    fn decode_code_from_file(#[case] address: &str) {
+        let mut code = fs::read_to_string(format!("testdata/{}_encoded.txt", address)).expect("Unable to read encoded file");
+        let decoded_reference =
+            fs::read_to_string(format!("testdata/{}_decoded.txt", address)).expect("No reference file");
+        code.pop();
 
-            println!("Decoding {}", encoded_file.to_str().unwrap());
-            let mut code = fs::read_to_string(&encoded_file).unwrap();
-            let decoded_reference = std::fs::read_to_string(decoded_file).unwrap();
-            // Remove trailing \n
-            code.pop();
-
-            let operations = disassemble(&code);
-            assert!(!operations.is_empty());
-            let formatted_operations = format_operations(operations);
-            for (i, line) in formatted_operations.lines().enumerate() {
-                assert_eq!(line, decoded_reference.lines().nth(i).unwrap());
-            }
-            println!("Decoded output from file {} matches reference", encoded_file.to_str().unwrap());
+        let operations = disassemble(&code).expect("Unable to decode");
+        assert!(!operations.is_empty());
+        let formatted_operations = format_operations(operations);
+        for (i, line) in formatted_operations.lines().enumerate() {
+            assert_eq!(line, decoded_reference.lines().nth(i).unwrap());
         }
+        println!(
+            "Decoded output from contract {} matches reference",
+            address
+        );
     }
 
     #[rstest]
     fn decode_preamble() {
         let code = "608060405260043610603f57600035";
-        let operations = disassemble(code);
+        let operations = disassemble(code).expect("Unable to decode");
         assert_eq!(operations.len(), 10);
     }
 
@@ -131,7 +108,7 @@ mod tests {
     #[case(Opcode::ADDMOD, "0x08")]
     #[case(Opcode::MULMOD, "0x09")]
     fn decode_single_op(#[case] opcode: Opcode, #[case] encoded_opcode: &str) {
-        let result = disassemble(encoded_opcode);
+        let result = disassemble(encoded_opcode).expect("Unable to decode");
         assert_eq!(result, vec![Operation::new(opcode, 0)]);
     }
 
@@ -139,7 +116,7 @@ mod tests {
     fn decode_stop_and_add() {
         let add_op = "01";
         let stop_op = "00";
-        let result = disassemble(&(add_op.to_owned() + stop_op));
+        let result = disassemble(&(add_op.to_owned() + stop_op)).expect("Unable to decode");
         assert_eq!(
             result,
             vec![
