@@ -8,23 +8,20 @@
 //!
 //! ```rust
 //! use evm_disassembler::{disassemble_str, disassemble_bytes, format_operations};
-//!
-//! fn main() {
 //!    
-//!   let bytecode = "60606040526040";
-//!   let instructions = disassemble_str(bytecode).unwrap();
-//!   // Will print:
-//!   // 00000000: PUSH1 0x60
-//!   // 00000002: PUSH1 0x40
-//!   // 00000004: MSTORE
-//!   // 00000005: PUSH1 0x40
-//!   println!("{}", format_operations(instructions));
+//! let bytecode = "60606040526040";
+//! let instructions = disassemble_str(bytecode).unwrap();
+//! // Will print:
+//! // 00000000: PUSH1 0x60
+//! // 00000002: PUSH1 0x40
+//! // 00000004: MSTORE
+//! // 00000005: PUSH1 0x40
+//! println!("{}", format_operations(instructions));
 //!
-//!   let bytes = hex::decode(bytecode).unwrap();
-//!   let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
-//!   println!("{}", format_operations(instructions_from_bytes));
+//! let bytes = hex::decode(bytecode).unwrap();
+//! let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
+//! println!("{}", format_operations(instructions_from_bytes));
 //!
-//! }
 //! ```
 #![warn(missing_docs)]
 use std::collections::VecDeque;
@@ -51,13 +48,8 @@ mod test_utils;
 /// ```rust
 /// use evm_disassembler::disassemble_str;
 ///
-///
-/// fn main() {
-///    
-///   let bytecode = "0x608060405260043610603f57600035";
-///   let instructions = disassemble_str(bytecode).unwrap();
-///
-/// }
+/// let bytecode = "0x608060405260043610603f57600035";
+/// let instructions = disassemble_str(bytecode).unwrap();
 /// ```
 pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
     let input = input.trim_start_matches("0x").to_owned();
@@ -78,11 +70,9 @@ pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
 /// ```rust
 /// use evm_disassembler::disassemble_bytes;
 ///
-/// fn main() {
-///   let bytecode = "608060405260043610603f57600035";
-///   let bytes = hex::decode(bytecode).unwrap();
-///   let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
-/// }
+/// let bytecode = "608060405260043610603f57600035";
+/// let bytes = hex::decode(bytecode).unwrap();
+/// let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
 /// ```
 pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
     let mut bytes = VecDeque::from(input);
@@ -119,11 +109,9 @@ pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
 /// ```rust
 /// use evm_disassembler::{disassemble_str, format_operations};
 ///
-/// fn main() {
-///   let bytecode = "0x608060405260043610603f57600035";
-///   let instructions = disassemble_str(bytecode).unwrap();
-///   println!("{}", format_operations(instructions));
-/// }
+/// let bytecode = "0x608060405260043610603f57600035";
+/// let instructions = disassemble_str(bytecode).unwrap();
+/// println!("{}", format_operations(instructions));
 /// ```
 pub fn format_operations(operations: Vec<Operation>) -> String {
     let mut formatted = String::new();
