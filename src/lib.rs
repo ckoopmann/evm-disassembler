@@ -3,7 +3,7 @@ use std::collections::VecDeque;
 use crate::decode::decode_operation;
 use crate::types::Operation;
 
-use eyre::{eyre, Result};
+use eyre::Result;
 
 mod decode;
 pub mod types;
@@ -11,13 +11,14 @@ pub mod types;
 #[cfg(test)]
 mod test_utils;
 
-pub fn disassemble(input: &str) -> Result<Vec<Operation>> {
+pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
     let input = input.trim_start_matches("0x").to_owned();
-    // TODO: Potentially remove
-    if input.len() % 2 != 0 {
-        return Err(eyre!("Odd number of hex characters"));
-    }
-    let mut bytes = VecDeque::from(hex::decode(input).expect("Invalid hex string"));
+    let bytes = hex::decode(input)?;
+    return disassemble_bytes(bytes);
+}
+
+pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
+    let mut bytes = VecDeque::from(input);
     let mut operations = Vec::new();
     let mut new_operation: Operation;
     let mut offset = 0;
@@ -59,7 +60,7 @@ mod tests {
         #[case] expected_opcodes: Vec<(Opcode, usize)>,
     ) {
         let code = get_contract_code(address).await;
-        let operations = disassemble(&code).expect("Unable to disassemble code");
+        let operations = disassemble_str(&code).expect("Unable to disassemble code");
         assert_eq!(operations.len(), expected_length);
         for (opcode, expected_position) in expected_opcodes.iter() {
             assert_eq!(operations[*expected_position].opcode, *opcode);
@@ -77,7 +78,7 @@ mod tests {
             fs::read_to_string(format!("testdata/{}_decoded.txt", address)).expect("No reference file");
         code.pop();
 
-        let operations = disassemble(&code).expect("Unable to decode");
+        let operations = disassemble_str(&code).expect("Unable to decode");
         assert!(!operations.is_empty());
         let formatted_operations = format_operations(operations);
         for (i, line) in formatted_operations.lines().enumerate() {
@@ -92,9 +93,17 @@ mod tests {
     #[rstest]
     fn decode_preamble() {
         let code = "608060405260043610603f57600035";
-        let operations = disassemble(code).expect("Unable to decode");
+        let operations = disassemble_str(code).expect("Unable to decode");
         assert_eq!(operations.len(), 10);
     }
+
+    #[rstest]
+    fn decode_preamble_from_bytes() {
+        let bytes = hex::decode("608060405260043610603f57600035").unwrap();
+        let operations = disassemble_bytes(bytes).expect("Unable to decode");
+        assert_eq!(operations.len(), 10);
+    }
+
 
     #[rstest]
     #[case(Opcode::STOP, "0x00")]
@@ -108,7 +117,7 @@ mod tests {
     #[case(Opcode::ADDMOD, "0x08")]
     #[case(Opcode::MULMOD, "0x09")]
     fn decode_single_op(#[case] opcode: Opcode, #[case] encoded_opcode: &str) {
-        let result = disassemble(encoded_opcode).expect("Unable to decode");
+        let result = disassemble_str(encoded_opcode).expect("Unable to decode");
         assert_eq!(result, vec![Operation::new(opcode, 0)]);
     }
 
@@ -116,7 +125,7 @@ mod tests {
     fn decode_stop_and_add() {
         let add_op = "01";
         let stop_op = "00";
-        let result = disassemble(&(add_op.to_owned() + stop_op)).expect("Unable to decode");
+        let result = disassemble_str(&(add_op.to_owned() + stop_op)).expect("Unable to decode");
         assert_eq!(
             result,
             vec![
