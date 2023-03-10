@@ -7,18 +7,17 @@
 //! format identical to that of the [pyevmasm](https://github.com/crytic/pyevmasm) library
 //!
 //! ```rust
-//! # use evm_disassembler::{disassemble_str, disassemble_bytes, format_instructions};
-//! #
-//! #[tokio::main]
+//! use evm_disassembler::{disassemble_str, disassemble_bytes, format_operations};
+//! 
 //! fn main() {
 //!    
-//!   let bytecode = "0x608060405260043610603f57600035";
+//!   let bytecode = "608060405260043610603f57600035";
 //!   let instructions = disassemble_str(bytecode).unwrap();
-//!   println!("{}", format_instructions(&instructions));
+//!   println!("{}", format_operations(instructions));
 //!
-//!   let bytes = &hex::decode(bytecode).unwrap();
+//!   let bytes = hex::decode(bytecode).unwrap();
 //!   let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
-//!   println!("{}", format_instructions(&instructions_from_bytes));
+//!   println!("{}", format_operations(instructions_from_bytes));
 //!
 //! }
 //! ```
@@ -44,9 +43,9 @@ mod test_utils;
 /// - `input` - A hex encoded string representing the bytecode to disassemble
 /// 
 /// ```rust
-/// # use evm_disassembler::{disassemble_str};
-/// #
-/// #[tokio::main]
+/// use evm_disassembler::disassemble_str;
+/// 
+/// 
 /// fn main() {
 ///    
 ///   let bytecode = "0x608060405260043610603f57600035";
@@ -69,11 +68,11 @@ pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
 /// - `input` - A vector of bytes representing the encoded bytecode
 /// 
 /// ```rust
-/// use evm_disassembler::{disassemble_bytes};
+/// use evm_disassembler::disassemble_bytes;
 /// 
 /// fn main() {
-///   let bytecode = "0x608060405260043610603f57600035";
-///   let bytes = &hex::decode(bytecode).unwrap();
+///   let bytecode = "608060405260043610603f57600035";
+///   let bytes = hex::decode(bytecode).unwrap();
 ///   let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
 /// }
 /// ```
@@ -109,12 +108,12 @@ pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
 /// `disassemble_bytes`
 /// 
 /// ```rust
-/// use evm_disassembler::{disassemble_bytes};
+/// use evm_disassembler::{disassemble_str, format_operations};
 /// 
 /// fn main() {
 ///   let bytecode = "0x608060405260043610603f57600035";
-///   let bytes = &hex::decode(bytecode).unwrap();
-///   let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
+///   let instructions = disassemble_str(bytecode).unwrap();
+///   println!("{}", format_operations(instructions));
 /// }
 /// ```
 pub fn format_operations(operations: Vec<Operation>) -> String {
