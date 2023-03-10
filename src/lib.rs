@@ -1,3 +1,28 @@
+//! Disassemble evm bytecode into individual instructions.
+//!
+//! This crate provides a simple interface for disassembling evm bytecode into individual
+//! instructions / opcodes.
+//! It supports both hex encoded strings as well as a vector of bytes as input
+//! Additionally it provides a method to format the disassembled instructions into a human readable
+//! format identical to that of the [pyevmasm](https://github.com/crytic/pyevmasm) library
+//!
+//! ```rust
+//! # use evm_disassembler::{disassemble_str, disassemble_bytes, format_instructions};
+//! #
+//! #[tokio::main]
+//! fn main() {
+//!    
+//!   let bytecode = "0x608060405260043610603f57600035";
+//!   let instructions = disassemble_str(bytecode).unwrap();
+//!   println!("{}", format_instructions(&instructions));
+//!
+//!   let bytes = &hex::decode(bytecode).unwrap();
+//!   let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
+//!   println!("{}", format_instructions(&instructions_from_bytes));
+//!
+//! }
+//! ```
+#![warn(missing_docs)]
 use std::collections::VecDeque;
 
 use crate::decode::decode_operation;
@@ -6,17 +31,52 @@ use crate::types::Operation;
 use eyre::Result;
 
 mod decode;
+
+/// Module containing output types for Operation and Opcode
 pub mod types;
 
 #[cfg(test)]
 mod test_utils;
 
+/// Disassemble a hex encoded string into a vector of instructions / operations
+/// 
+/// # Arguments
+/// - `input` - A hex encoded string representing the bytecode to disassemble
+/// 
+/// ```rust
+/// # use evm_disassembler::{disassemble_str};
+/// #
+/// #[tokio::main]
+/// fn main() {
+///    
+///   let bytecode = "0x608060405260043610603f57600035";
+///   let instructions = disassemble_str(bytecode).unwrap();
+///
+/// }
+/// ```
 pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
     let input = input.trim_start_matches("0x").to_owned();
     let bytes = hex::decode(input)?;
     return disassemble_bytes(bytes);
 }
 
+/// Disassemble a vector of bytes into a vecotr of decoded Operations
+/// 
+/// Will stop disassembling when it encounters a push instruction with a size greater than
+/// remaining bytes in the input
+/// 
+/// # Arguments
+/// - `input` - A vector of bytes representing the encoded bytecode
+/// 
+/// ```rust
+/// use evm_disassembler::{disassemble_bytes};
+/// 
+/// fn main() {
+///   let bytecode = "0x608060405260043610603f57600035";
+///   let bytes = &hex::decode(bytecode).unwrap();
+///   let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
+/// }
+/// ```
 pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
     let mut bytes = VecDeque::from(input);
     let mut operations = Vec::new();
@@ -35,6 +95,28 @@ pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
     Ok(operations)
 }
 
+/// Converts a vector of decoded operations into a human readable formatted string
+/// 
+/// Operations are formatted on individual lines with the following format:
+/// `{offset}: {opcode} {bytes}`
+///
+/// - `offset` - The offset of the operation in the bytecode (as hex)
+/// - `opcode` - The respective opcode (i.e. "PUSH1", "ADD")
+/// - `bytes` - Additional bytes that are part of the operation (only for "PUSH" instructions)
+/// 
+/// # Arguments
+/// - `operations` - A vector of decoded operations as returned by `disassemble_str` or
+/// `disassemble_bytes`
+/// 
+/// ```rust
+/// use evm_disassembler::{disassemble_bytes};
+/// 
+/// fn main() {
+///   let bytecode = "0x608060405260043610603f57600035";
+///   let bytes = &hex::decode(bytecode).unwrap();
+///   let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
+/// }
+/// ```
 pub fn format_operations(operations: Vec<Operation>) -> String {
     let mut formatted = String::new();
     for operation in operations {

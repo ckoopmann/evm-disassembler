@@ -2,7 +2,11 @@ use std::collections::VecDeque;
 use std::fmt;
 use eyre::{eyre, Result};
 
+/// A single EVM operation
+/// 
+/// For additional information on each operation see: https://www.evm.codes/
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(missing_docs)]
 pub enum Opcode {
     STOP,
     ADD,
@@ -150,6 +154,7 @@ pub enum Opcode {
 }
 
 impl Opcode {
+    /// Convert a byte into an Opcode
     pub fn from_byte(byte: u8) -> Opcode {
         match byte {
             0x00 => Opcode::STOP,
@@ -299,10 +304,17 @@ impl Opcode {
     }
 }
 
+/// A decoded operation
+///
+/// An operation is represented by the combination of an opcode, the offset in the bytecode and any
+/// additional bytes that are part of the operation (only for PUSH operations).
 #[derive(PartialEq, Eq)]
 pub struct Operation {
+    /// The opcode
     pub opcode: Opcode,
+    /// Additional bytes that are part of the Operation (only for PUSH)
     pub input: Vec<u8>,
+    /// The offset in the bytecode
     pub offset: u32,
 }
 
@@ -326,6 +338,7 @@ impl fmt::Debug for Operation {
 }
 
 impl Operation {
+    /// Creates a new operation with empty `input` bytes
     pub fn new(opcode: Opcode, offset: u32) -> Self {
         Operation {
             opcode,
@@ -334,6 +347,7 @@ impl Operation {
         }
     }
 
+    /// Adds additional bytes to the operation (for PUSH instructions)
     pub fn with_bytes(self, num_bytes: u8, bytes: &mut VecDeque<u8>) -> Result<Self> {
         if num_bytes == 0 {
             return Ok(self);
