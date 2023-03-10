@@ -323,7 +323,7 @@ impl fmt::Debug for Operation {
         let mut formatted = format!("{:0>8}: {:?}", format!("{:#x}", self.offset).trim_start_matches("0x"), self.opcode);
         if !self.input.is_empty() {
             let encoded_bytes = hex::encode(&self.input);
-            let mut formatted_bytes = encoded_bytes.trim_start_matches("0");
+            let mut formatted_bytes = encoded_bytes.trim_start_matches('0');
             if formatted_bytes.is_empty() {
                 formatted_bytes = "0";
             }
@@ -333,7 +333,7 @@ impl fmt::Debug for Operation {
                 "0x".to_owned() +  formatted_bytes
             );
         }
-        write!(f, "{}", formatted)
+        write!(f, "{formatted}")
     }
 }
 

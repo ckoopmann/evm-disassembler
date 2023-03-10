@@ -18,5 +18,5 @@ pub fn decode_operation(bytes: &mut VecDeque<u8>, cur_offset: u32) -> Result<(Op
             new_offset += num_bytes as u32;
             operation = operation.with_bytes(num_bytes, bytes)?
     };
-    return Ok((operation, new_offset));
+    Ok((operation, new_offset))
 }

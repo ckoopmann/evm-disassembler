@@ -56,7 +56,7 @@ mod test_utils;
 pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
     let input = input.trim_start_matches("0x").to_owned();
     let bytes = hex::decode(input)?;
-    return disassemble_bytes(bytes);
+    disassemble_bytes(bytes)
 }
 
 /// Disassemble a vector of bytes into a vecotr of decoded Operations
@@ -85,7 +85,7 @@ pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
         (new_operation, offset) = match decode_operation(&mut bytes, offset) {
             Ok((operation, new_offset)) => (operation, new_offset),
             Err(e) => {
-                println!("Stop decoding at offset {} due to error : {}", offset, e);
+                println!("Stop decoding at offset {offset} due to error : {e}");
                 break;
             }
         };
@@ -119,9 +119,9 @@ pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
 pub fn format_operations(operations: Vec<Operation>) -> String {
     let mut formatted = String::new();
     for operation in operations {
-        formatted = format!("{}{:?}\n", formatted, operation);
+        formatted = format!("{formatted}{operation:?}\n");
     }
-    return formatted;
+    formatted
 }
 
 #[cfg(test)]
@@ -154,9 +154,9 @@ mod tests {
     #[case("0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48")]  // ZeroEx Proxy
     #[case("0x00000000006c3852cbEf3e08E8dF289169EdE581")]  // Seaport
     fn decode_code_from_file(#[case] address: &str) {
-        let mut code = fs::read_to_string(format!("testdata/{}_encoded.txt", address)).expect("Unable to read encoded file");
+        let mut code = fs::read_to_string(format!("testdata/{address}_encoded.txt")).expect("Unable to read encoded file");
         let decoded_reference =
-            fs::read_to_string(format!("testdata/{}_decoded.txt", address)).expect("No reference file");
+            fs::read_to_string(format!("testdata/{address}_decoded.txt")).expect("No reference file");
         code.pop();
 
         let operations = disassemble_str(&code).expect("Unable to decode");
@@ -166,8 +166,7 @@ mod tests {
             assert_eq!(line, decoded_reference.lines().nth(i).unwrap());
         }
         println!(
-            "Decoded output from contract {} matches reference",
-            address
+            "Decoded output from contract {address} matches reference"
         );
     }
 
