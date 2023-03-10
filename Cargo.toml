@@ -1,8 +1,16 @@
 [package]
 name = "evm-disassembler"
 version = "0.1.0"
+authors = ["Christian Koopmann <c.k.e.koopmann@gmail.com>"]
+license = "MIT OR Apache-2.0"
 edition = "2021"
-authors = ["ckoopmann"]
+readme = "README.md"
+documentation = "https://docs.rs/evm-disassembler"
+repository = "https://github.com/ckoopmann/evm-disassembler"
+homepage = "https://docs.rs/evm_disassembler"
+description = """
+Disassemble EVM bytecode into individual Opcodes and format into human readable strings.
+"""
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
