@@ -302,27 +302,33 @@ impl Opcode {
 pub struct Operation {
     pub opcode: Opcode,
     pub input: Vec<u8>,
+    pub offset: u32,
 }
 
 impl fmt::Debug for Operation {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut formatted = format!("{:0>8}: {:?}", format!("{:#x}", self.offset).trim_start_matches("0x"), self.opcode);
         if !self.input.is_empty() {
-            write!(
-                f,
-                "{:?} {}",
-                self.opcode,
-                "0x".to_owned() + &hex::encode(&self.input)
-            )
-        } else {
-            write!(f, "{:?}", self.opcode,)
+            let encoded_bytes = hex::encode(&self.input);
+            let mut formatted_bytes = encoded_bytes.trim_start_matches("0");
+            if formatted_bytes.is_empty() {
+                formatted_bytes = "0";
+            }
+            formatted = format!(
+                "{} {}",
+                formatted,
+                "0x".to_owned() +  formatted_bytes
+            );
         }
+        write!(f, "{}", formatted)
     }
 }
 
 impl Operation {
-    pub fn new(opcode: Opcode) -> Self {
+    pub fn new(opcode: Opcode, offset: u32) -> Self {
         Operation {
             opcode,
+            offset,
             input: Vec::new(),
         }
     }
@@ -333,6 +339,7 @@ impl Operation {
         }
         Operation {
             opcode: self.opcode,
+            offset: self.offset,
             input: bytes.drain(0..num_bytes as usize).collect::<Vec<u8>>(),
         }
     }
