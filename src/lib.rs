@@ -11,8 +11,13 @@
 //!
 //! fn main() {
 //!    
-//!   let bytecode = "608060405260043610603f57600035";
+//!   let bytecode = "60606040526040";
 //!   let instructions = disassemble_str(bytecode).unwrap();
+//!   // Will print:
+//!   // 00000000: PUSH1 0x60
+//!   // 00000002: PUSH1 0x40
+//!   // 00000004: MSTORE
+//!   // 00000005: PUSH1 0x40
 //!   println!("{}", format_operations(instructions));
 //!
 //!   let bytes = hex::decode(bytecode).unwrap();
@@ -25,14 +30,13 @@
 use std::collections::VecDeque;
 
 use crate::decode::decode_operation;
-use crate::types::Operation;
 
 use eyre::Result;
 
 mod decode;
 
-/// Module containing output types for Operation and Opcode
 pub mod types;
+pub use types::{Opcode, Operation};
 
 #[cfg(test)]
 mod test_utils;
@@ -41,6 +45,8 @@ mod test_utils;
 ///
 /// # Arguments
 /// - `input` - A hex encoded string representing the bytecode to disassemble
+///
+/// # Examples
 ///
 /// ```rust
 /// use evm_disassembler::disassemble_str;
@@ -66,6 +72,8 @@ pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
 ///
 /// # Arguments
 /// - `input` - A vector of bytes representing the encoded bytecode
+///
+/// # Examples
 ///
 /// ```rust
 /// use evm_disassembler::disassemble_bytes;
@@ -107,6 +115,7 @@ pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
 /// - `operations` - A vector of decoded operations as returned by `disassemble_str` or
 /// `disassemble_bytes`
 ///
+/// # Examples
 /// ```rust
 /// use evm_disassembler::{disassemble_str, format_operations};
 ///

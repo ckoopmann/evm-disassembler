@@ -1,3 +1,4 @@
+//! Output types for Operation and Opcode
 use eyre::{eyre, Result};
 use std::collections::VecDeque;
 use std::fmt;
