@@ -60,7 +60,7 @@ mod tests {
         #[case] expected_opcodes: Vec<(Opcode, usize)>,
     ) {
         let code = get_contract_code(address).await;
-        let operations = disassemble_str(&code).expect("Unable to disassemble code");
+        let operations = disassemble_bytes(code).expect("Unable to disassemble code");
         assert_eq!(operations.len(), expected_length);
         for (opcode, expected_position) in expected_opcodes.iter() {
             assert_eq!(operations[*expected_position].opcode, *opcode);

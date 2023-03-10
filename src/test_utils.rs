@@ -15,10 +15,10 @@ pub fn encode_op(opcode: &str, stack_input: Vec<[u8; 32]>) -> String {
     bytes
 }
 
-pub async fn get_contract_code(address: &str) -> String {
+pub async fn get_contract_code(address: &str) -> Vec<u8> {
     let provider = get_provider(None);
     let code = provider.get_code(address, None).await.unwrap();
-    code.to_string()
+    code.as_ref().to_owned()
 }
 
 pub fn get_provider(rpc_url: Option<&str>) -> Provider<Http> {
