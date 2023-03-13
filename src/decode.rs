@@ -1,9 +1,11 @@
 use crate::types::{Opcode, Operation};
 use eyre::Result;
-use std::collections::VecDeque;
 
-pub fn decode_operation(bytes: &mut VecDeque<u8>, cur_offset: u32) -> Result<(Operation, u32)> {
-    let encoded_opcode = bytes.pop_front().expect("Unexpected end of input");
+pub fn decode_operation(
+    bytes: &mut dyn ExactSizeIterator<Item = u8>,
+    cur_offset: u32,
+) -> Result<(Operation, u32)> {
+    let encoded_opcode = bytes.next().expect("Unexpected end of input");
     let num_bytes = match encoded_opcode {
         0x60..=0x7f => encoded_opcode - 0x5f,
         _ => 0,

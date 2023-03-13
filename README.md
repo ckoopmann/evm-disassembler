@@ -7,6 +7,9 @@ This library was inspired by the [pyevmasm](https://github.com/crytic/pyevmasm).
 # Installation
 `cargo add evm-disassembler`
 
+# Documentation
+See the API reference [here](https://docs.rs/evm-disassembler/).
+
 # Example
  ```rust
  use evm_disassembler::{disassemble_str, disassemble_bytes, format_operations};
