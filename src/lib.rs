@@ -16,17 +16,16 @@
 //! // 00000002: PUSH1 0x40
 //! // 00000004: MSTORE
 //! // 00000005: PUSH1 0x40
-//! println!("{}", format_operations(instructions));
+//! println!("{}", format_operations(instructions).unwrap());
 //!
 //! let bytes = hex::decode(bytecode).unwrap();
 //! let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
-//! println!("{}", format_operations(instructions_from_bytes));
+//! println!("{}", format_operations(instructions_from_bytes).unwrap());
 //!
 //! ```
 #![warn(missing_docs)]
-use std::collections::VecDeque;
-
 use crate::decode::decode_operation;
+use std::fmt::Write;
 
 use eyre::Result;
 
@@ -52,18 +51,18 @@ mod test_utils;
 /// let instructions = disassemble_str(bytecode).unwrap();
 /// ```
 pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
-    let input = input.trim_start_matches("0x").to_owned();
+    let input = input.trim_start_matches("0x");
     let bytes = hex::decode(input)?;
     disassemble_bytes(bytes)
 }
 
-/// Disassemble a vector of bytes into a vecotr of decoded Operations
+/// Disassemble a vector of bytes into a vector of decoded Operations
 ///
 /// Will stop disassembling when it encounters a push instruction with a size greater than
 /// remaining bytes in the input
 ///
 /// # Arguments
-/// - `input` - A vector of bytes representing the encoded bytecode
+/// - `bytes` - A vector of bytes representing the encoded bytecode
 ///
 /// # Examples
 ///
@@ -74,13 +73,13 @@ pub fn disassemble_str(input: &str) -> Result<Vec<Operation>> {
 /// let bytes = hex::decode(bytecode).unwrap();
 /// let instructions_from_bytes = disassemble_bytes(bytes).unwrap();
 /// ```
-pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
-    let mut bytes = VecDeque::from(input);
+pub fn disassemble_bytes(bytes: Vec<u8>) -> Result<Vec<Operation>> {
     let mut operations = Vec::new();
     let mut new_operation: Operation;
     let mut offset = 0;
-    while !bytes.is_empty() {
-        (new_operation, offset) = match decode_operation(&mut bytes, offset) {
+    let mut bytes_iter = bytes.into_iter();
+    while bytes_iter.len() > 0 {
+        (new_operation, offset) = match decode_operation(&mut bytes_iter, offset) {
             Ok((operation, new_offset)) => (operation, new_offset),
             Err(e) => {
                 println!("Stop decoding at offset {offset} due to error : {e}");
@@ -111,14 +110,14 @@ pub fn disassemble_bytes(input: Vec<u8>) -> Result<Vec<Operation>> {
 ///
 /// let bytecode = "0x608060405260043610603f57600035";
 /// let instructions = disassemble_str(bytecode).unwrap();
-/// println!("{}", format_operations(instructions));
+/// println!("{}", format_operations(instructions).unwrap());
 /// ```
-pub fn format_operations(operations: Vec<Operation>) -> String {
+pub fn format_operations(operations: Vec<Operation>) -> Result<String> {
     let mut formatted = String::new();
-    for operation in operations {
-        formatted = format!("{formatted}{operation:?}\n");
+    for operation in operations.iter() {
+        writeln!(formatted, "{operation:?}")?;
     }
-    formatted
+    Ok(formatted)
 }
 
 #[cfg(test)]
@@ -160,7 +159,11 @@ mod tests {
         let operations = disassemble_str(&code).expect("Unable to decode");
         assert!(!operations.is_empty());
         let formatted_operations = format_operations(operations);
-        for (i, line) in formatted_operations.lines().enumerate() {
+        for (i, line) in formatted_operations
+            .expect("failed to format")
+            .lines()
+            .enumerate()
+        {
             assert_eq!(line, decoded_reference.lines().nth(i).unwrap());
         }
         println!("Decoded output from contract {address} matches reference");

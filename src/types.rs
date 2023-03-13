@@ -1,6 +1,5 @@
 //! Output types for Operation and Opcode
 use eyre::{eyre, Result};
-use std::collections::VecDeque;
 use std::fmt;
 
 /// A single EVM operation
@@ -349,7 +348,11 @@ impl Operation {
     }
 
     /// Adds additional bytes to the operation (for PUSH instructions)
-    pub fn with_bytes(self, num_bytes: u8, bytes: &mut VecDeque<u8>) -> Result<Self> {
+    pub fn with_bytes(
+        self,
+        num_bytes: u8,
+        bytes: &mut dyn ExactSizeIterator<Item = u8>,
+    ) -> Result<Self> {
         if num_bytes == 0 {
             return Ok(self);
         }
@@ -363,7 +366,7 @@ impl Operation {
         Ok(Operation {
             opcode: self.opcode,
             offset: self.offset,
-            input: bytes.drain(0..num_bytes as usize).collect::<Vec<u8>>(),
+            input: bytes.take(num_bytes as usize).collect(),
         })
     }
 }
