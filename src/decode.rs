@@ -7,7 +7,9 @@ pub fn decode_operation(
 ) -> Result<(Operation, u32)> {
     let encoded_opcode = bytes.next().expect("Unexpected end of input");
     let num_bytes = match encoded_opcode {
-        0x60..=0x7f => encoded_opcode - 0x5f,
+        _ if encoded_opcode <= Opcode::PUSH32 as u8 && encoded_opcode >= Opcode::PUSH1 as u8 => {
+            encoded_opcode + 1 - Opcode::PUSH1 as u8
+        }
         _ => 0,
     };
 
