@@ -24,13 +24,13 @@
 //!
 //! ```
 #![warn(missing_docs)]
-use crate::decode::decode_operation;
 use std::fmt::Write;
 
 use eyre::Result;
 
 mod decode;
 
+pub use crate::decode::decode_operation;
 pub mod types;
 pub use types::{Opcode, Operation};
 
