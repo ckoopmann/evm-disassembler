@@ -24,13 +24,13 @@
 //!
 //! ```
 #![warn(missing_docs)]
-use crate::decode::decode_operation;
 use std::fmt::Write;
 
 use eyre::Result;
 
 mod decode;
 
+pub use crate::decode::decode_operation;
 pub mod types;
 pub use types::{Opcode, Operation};
 
@@ -82,8 +82,7 @@ pub fn disassemble_bytes(bytes: Vec<u8>) -> Result<Vec<Operation>> {
         (new_operation, offset) = match decode_operation(&mut bytes_iter, offset) {
             Ok((operation, new_offset)) => (operation, new_offset),
             Err(e) => {
-                println!("Stop decoding at offset {offset} due to error : {e}");
-                break;
+                return Err(e);
             }
         };
         operations.push(new_operation);
