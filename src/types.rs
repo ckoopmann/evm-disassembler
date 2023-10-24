@@ -151,6 +151,8 @@ pub enum Opcode {
     REVERT,
     INVALID,
     SELFDESTRUCT,
+    BLOBBASEFEE,
+    BLOBHASH,
 }
 
 impl Opcode {
@@ -209,6 +211,8 @@ impl Opcode {
             0x46 => Opcode::CHAINID,
             0x47 => Opcode::SELFBALANCE,
             0x48 => Opcode::BASEFEE,
+            0x49 => Opcode::BLOBHASH,
+            0x4a => Opcode::BLOBBASEFEE,
             0x50 => Opcode::POP,
             0x51 => Opcode::MLOAD,
             0x52 => Opcode::MSTORE,
