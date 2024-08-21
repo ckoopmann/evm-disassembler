@@ -15,7 +15,7 @@ Disassemble EVM bytecode into individual Opcodes and format into human readable 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-eyre = "0.6.8"
+eyre = "0.6.12"
 hex = "0.4.3"
 
 [dev-dependencies]
