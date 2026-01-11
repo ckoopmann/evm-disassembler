@@ -158,6 +158,36 @@ pub enum Opcode {
     BLOBBASEFEE,
     BLOBHASH,
     CLZ,
+    // EOF Data Section (EIP-7480)
+    DATALOAD,
+    DATALOADN,
+    DATASIZE,
+    DATACOPY,
+    // EOF Static Jumps (EIP-4200)
+    RJUMP,
+    RJUMPI,
+    RJUMPV,
+    // EOF Functions (EIP-4750, EIP-6206)
+    CALLF,
+    RETF,
+    JUMPF,
+    // EOF Stack (EIP-663)
+    DUPN,
+    SWAPN,
+    EXCHANGE,
+    // EOF Type (EIP-7761)
+    EXTCODETYPE,
+    // EOF Contract Creation (EIP-7620, EIP-7873)
+    EOFCREATE,
+    TXCREATE,
+    RETURNCONTRACT,
+    // EOF Calls (EIP-7069)
+    RETURNDATALOAD,
+    EXTCALL,
+    EXTDELEGATECALL,
+    EXTSTATICCALL,
+    // Other (EIP-5920)
+    PAY,
 }
 
 impl Opcode {
@@ -314,6 +344,46 @@ impl Opcode {
             0xfd => Opcode::REVERT,
             0xff => Opcode::SELFDESTRUCT,
             _ => Opcode::INVALID,
+        }
+    }
+
+    /// Convert a byte into an Opcode (EOF-aware version)
+    ///
+    /// This version includes EOF opcodes and should only be used for EOF containers.
+    pub fn from_byte_eof(byte: u8) -> Opcode {
+        match byte {
+            // EOF Data Section (EIP-7480)
+            0xd0 => Opcode::DATALOAD,
+            0xd1 => Opcode::DATALOADN,
+            0xd2 => Opcode::DATASIZE,
+            0xd3 => Opcode::DATACOPY,
+            // EOF Static Jumps (EIP-4200)
+            0xe0 => Opcode::RJUMP,
+            0xe1 => Opcode::RJUMPI,
+            0xe2 => Opcode::RJUMPV,
+            // EOF Functions (EIP-4750, EIP-6206)
+            0xe3 => Opcode::CALLF,
+            0xe4 => Opcode::RETF,
+            0xe5 => Opcode::JUMPF,
+            // EOF Stack (EIP-663)
+            0xe6 => Opcode::DUPN,
+            0xe7 => Opcode::SWAPN,
+            0xe8 => Opcode::EXCHANGE,
+            // EOF Type (EIP-7761)
+            0xe9 => Opcode::EXTCODETYPE,
+            // EOF Contract Creation (EIP-7620, EIP-7873)
+            0xec => Opcode::EOFCREATE,
+            0xed => Opcode::TXCREATE,
+            0xee => Opcode::RETURNCONTRACT,
+            // EOF Calls (EIP-7069)
+            0xf7 => Opcode::RETURNDATALOAD,
+            0xf8 => Opcode::EXTCALL,
+            0xf9 => Opcode::EXTDELEGATECALL,
+            0xfb => Opcode::EXTSTATICCALL,
+            // Other (EIP-5920)
+            0xfc => Opcode::PAY,
+            // Fall back to legacy opcodes for non-EOF-specific bytes
+            _ => Self::from_byte(byte),
         }
     }
 }
