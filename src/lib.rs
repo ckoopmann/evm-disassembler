@@ -102,7 +102,7 @@ pub fn disassemble_bytes(bytes: Vec<u8>) -> Result<Vec<Operation>> {
 ///
 /// # Arguments
 /// - `operations` - A vector of decoded operations as returned by `disassemble_str` or
-/// `disassemble_bytes`
+///   `disassemble_bytes`
 ///
 /// # Examples
 /// ```rust

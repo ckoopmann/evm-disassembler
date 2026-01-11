@@ -157,6 +157,7 @@ pub enum Opcode {
     SELFDESTRUCT,
     BLOBBASEFEE,
     BLOBHASH,
+    CLZ,
 }
 
 impl Opcode {
@@ -189,6 +190,7 @@ impl Opcode {
             0x1b => Opcode::SHL,
             0x1c => Opcode::SHR,
             0x1d => Opcode::SAR,
+            0x1e => Opcode::CLZ,
             0x20 => Opcode::SHA3,
             0x30 => Opcode::ADDRESS,
             0x31 => Opcode::BALANCE,
